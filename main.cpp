@@ -61,7 +61,7 @@ void set_memory_limit(size_t limit_MB) { //if exceeded the memory limit used  me
 int main() {
     #ifndef _WIN32
         setup_segfault_handler();
-        set_memory_limit(4096); // 4 GB cap for testing
+        set_memory_limit(2048); // 4 GB cap for testing
     #endif
     
         size_t sizeMBytes = 1 ; //since heap is usualy 
