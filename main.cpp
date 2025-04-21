@@ -1,84 +1,60 @@
 #include <iostream>
-#include <cstdlib>   // for malloc, free
-#include <cstring>   // for memset
+
 #ifdef _WIN32
     #include <windows.h>
 #else
     #include <signal.h>
-    #include <sys/resource.h>
+    #include <setjmp.h>
     #include <unistd.h>
-    #include <sys/time.h>
+
+    static sigjmp_buf jump_buffer;
+
+    void handler(int sig) {
+        siglongjmp(jump_buffer, 1);
+    }
 #endif
 
-bool testArraySize(size_t sizeMBytes) {
-    size_t count = sizeMBytes * 1024 * 1024;
-
+bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
 #ifdef _WIN32
-    __try {
-        int* arr = (int*)malloc(count); 
-        memset(arr, 0, count);
-        std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
-        return true;
+    for (unsigned long addr = start; addr < end; addr += step) {
+        __try {
+            volatile unsigned char *p = (unsigned char *)addr;
+            unsigned char val = *p;  // Try to read
+            printf("Valid at 0x%08lx: 0x%02x\n", addr, val);
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            printf("Invalid at 0x%08lx\n", addr);
+        }
     }
-    __except (EXCEPTION_EXECUTE_HANDLER) {
-        std::cout << "Heap overflow at " << sizeMBytes << " MB!" << std::endl;
-        return false;
-    }
+    return true;
 #else
-    int* arr = (int*)malloc(count);
-    if (arr == nullptr) { //catch the error before memset so git hub actions wont OOM-kill 
-        std::cerr << "malloc failed at " << sizeMBytes << " MB\n";
-        return false;
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_NODEFER;
+    sigaction(SIGSEGV, &sa, NULL);
+
+    for (unsigned long addr = start; addr < end; addr += step) {
+        if (sigsetjmp(jump_buffer, 1) == 0) {
+            volatile unsigned char *p = (unsigned char *)addr;
+            unsigned char val = *p;  // Try to read
+            printf("Valid at 0x%08lx: 0x%02x\n", addr, val);
+        } else {
+            printf("Invalid at 0x%08lx\n", addr);
+        }
     }
-    memset(arr, 0, count);
-    std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
     return true;
 #endif
 }
 
-
-#ifndef _WIN32
-void setup_segfault_handler() {
-    struct rlimit core_limit = {0, 0};
-    setrlimit(RLIMIT_CORE, &core_limit);
-
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
-    sa.sa_sigaction = [](int, siginfo_t*, void*) {
-        std::cerr << "Caught SIGSEGV. Exiting cleanly.\n";
-        _exit(EXIT_FAILURE);
-    };
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGSEGV, &sa, nullptr); // a POSIX signal	Sent by the OS when your program violates memory access rules
-}
-
-void set_memory_limit(size_t limit_MB) { //if exceeded the memory limit used  memset will get SIGSEGV
-    struct rlimit rlim;
-    rlim.rlim_cur = rlim.rlim_max = limit_MB * 1024 * 1024; // Limit in bytes
-    if (setrlimit(RLIMIT_AS, &rlim) != 0) {
-        perror("setrlimit failed");
-    } else {
-        std::cout << "Set virtual memory limit to " << limit_MB << " MB\n";
-    }
-}
-#endif
-
 int main() {
-    #ifndef _WIN32
-        setup_segfault_handler();
-        set_memory_limit(4096); // 4 GB cap for testing
-    #endif
-    
-        size_t sizeMBytes = 1 ; //since heap is usualy 
-    
-        while (true) {
-            std::cout << "Trying " << sizeMBytes << " MB..." << std::endl;
-            if (!testArraySize(sizeMBytes)) {
-                std::cout << "Program terminated due to heap overflow." << std::endl;
-                break;
-            }
-            sizeMBytes = static_cast<size_t>(sizeMBytes * 2);
-        }
-    
-        return 0;
-    }
+    // Kernel memory is NOT accessible from user-space
+    // so start somewhere after NULL page but before high addresses
+    unsigned long start = 0x1000;
+    unsigned long end = 0x7FFFFFFF;  // upper bound of user space (on 32-bit)
+    unsigned long step = 0x1000;     // page-size aligned
+
+    MemoryAccess(start, end, step);
+
+    return 0;
+}
