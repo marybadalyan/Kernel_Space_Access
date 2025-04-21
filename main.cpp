@@ -1,12 +1,12 @@
 #include <iostream>
-#include <vector>
+#include <stdio.h>
+#include <stdint.h>
 #ifdef _WIN32
     #include <windows.h>
 #else
     #include <signal.h>
     #include <setjmp.h>
-    #include <unistd.h>
-
+    
     static sigjmp_buf jump_buffer;
 
     void handler(int sig) {
