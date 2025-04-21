@@ -39,7 +39,8 @@ void setup_segfault_handler() {
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = [](int, siginfo_t*, void*) {
-        _exit(EXIT_FAILURE); // Just exit silently
+        std::cerr << "Caught SIGSEGV. Exiting cleanly.\n";
+        _exit(EXIT_FAILURE);
     };
     sigemptyset(&sa.sa_mask);
     sigaction(SIGSEGV, &sa, nullptr); // a POSIX signal	Sent by the OS when your program violates memory access rules
@@ -52,7 +53,7 @@ int main() {
         setup_segfault_handler();
     #endif
     
-        size_t sizeMBytes = 1024 * 1024; //since heap is usualy 
+        size_t sizeMBytes = 1 ; //since heap is usualy 
     
         while (true) {
             std::cout << "Trying " << sizeMBytes << " MB..." << std::endl;
@@ -60,7 +61,7 @@ int main() {
                 std::cout << "Program terminated due to heap overflow." << std::endl;
                 break;
             }
-            sizeMBytes = static_cast<size_t>(sizeMBytes * 10);
+            sizeMBytes = static_cast<size_t>(sizeMBytes * 2);
         }
     
         return 0;
