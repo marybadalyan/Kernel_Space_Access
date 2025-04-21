@@ -1,6 +1,6 @@
 #include <iostream>
-#include <cstdlib>
-
+#include <cstdlib>   // for malloc, free
+#include <cstring>   // for memset
 #ifdef _WIN32
     #include <windows.h>
     #include <processthreadsapi.h>
@@ -12,10 +12,10 @@
 
 bool testArraySize(size_t sizeBytes) {
     const size_t count = sizeBytes; // Bytes to number of ints
-
+    // Will not be freeing  allocated memory
     #ifdef _WIN32
         __try {
-            int* arr = (int*)malloc(count);
+            int* arr = (int*)malloc(count); 
             memset(arr, 0, count); // Now we force the OS to commit pages
             std::cout << "Allocated " << sizeBytes << " bytes" << std::endl;
             return true;
