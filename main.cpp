@@ -23,6 +23,7 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
             printf("Valid at 0x%08lx: 0x%02x\n", addr, val);
         }
         __except (EXCEPTION_EXECUTE_HANDLER) {
+            printf("Seg fault resolved\n");
             printf("Invalid at 0x%08lx\n", addr);
         }
     }
@@ -40,6 +41,7 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
             unsigned char val = *p;  // Try to read
             printf("Valid at 0x%08lx: 0x%02x\n", addr, val);
         } else {
+            printf("Seg fault resolved\n");
             printf("Invalid at 0x%08lx\n", addr);
         }
     }
@@ -52,7 +54,7 @@ int main() {
     // so start somewhere after NULL page but before high addresses
     unsigned long start = 0x1000;
     unsigned long end = 0x7FFFFFFF;  // upper bound of user space (on 32-bit)
-    unsigned long step = 0xFFFFFF;     
+    unsigned long step = 0x2FFFFFF;     
     MemoryAccess(start, end, step);
 
     return 0;
