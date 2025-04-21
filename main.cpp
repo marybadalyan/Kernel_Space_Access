@@ -11,26 +11,31 @@
 #endif
 
 bool testArraySize(size_t sizeMBytes) {
-    size_t count = sizeMBytes * 1024 * 1024; // Bytes to number of ints
-    // Will not be freeing  allocated memory
-    #ifdef _WIN32
-        __try {
-            int* arr = (int*)malloc(count); 
-            memset(arr, 0, count); // Now we force the OS to commit pages
-            std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
-            return true;
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER){ // Structured Exception Handling
-            std::cout << "Heap overflow at " << sizeMBytes << " MB!" << std::endl;
-            return false;
-        }
-    #else
-        int* arr  =(int*)malloc(count);
+    size_t count = sizeMBytes * 1024 * 1024;
+
+#ifdef _WIN32
+    __try {
+        int* arr = (int*)malloc(count); 
         memset(arr, 0, count);
-        std::cout << "Allocated " << sizeMBytes  << " MB" << std::endl;
+        std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
         return true;
-    #endif
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        std::cout << "Heap overflow at " << sizeMBytes << " MB!" << std::endl;
+        return false;
+    }
+#else
+    int* arr = (int*)malloc(count);
+    if (arr == nullptr) { //catch the error before memset so git hub actions wont OOM-kill 
+        std::cerr << "malloc failed at " << sizeMBytes << " MB\n";
+        return false;
+    }
+    memset(arr, 0, count);
+    std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
+    return true;
+#endif
 }
+
 
 #ifndef _WIN32
 void setup_segfault_handler() {
