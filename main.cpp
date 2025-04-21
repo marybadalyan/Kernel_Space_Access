@@ -22,14 +22,14 @@ bool MemoryAccess(uintptr_t start, uintptr_t end, uintptr_t step) {
             unsigned char val = *p;  // Try to read
             printf("Valid at 0x%08lx: 0x%02x\n", addr, val);
         }
-        __except (EXCEPTION_EXECUTE_HANDLER) {
-            printf("Seg fault resolved\n");
+        __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION) { // Structured Exception Handling
+            printf("Segmentation fault (access violation) resolved\n");
             printf("Invalid at 0x%08lx\n", addr);
         }
     }
     return true;
 #else
-    struct sigaction sa;
+    struct sigaction sa;  // signal handling method struct 
     sa.sa_handler = handler;
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_NODEFER;
