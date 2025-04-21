@@ -52,7 +52,7 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
 int main() {
     // Kernel memory is NOT accessible from user-space
     // so start somewhere after NULL page but before high addresses
-    unsigned long start = 0x1000;
+    unsigned long start = 0x500;
     unsigned long end = 0x7FFFFFFF;  // upper bound of user space (on 32-bit)
     unsigned long step = 0x2FFFFFF;     
     MemoryAccess(start, end, step);
