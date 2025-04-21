@@ -14,9 +14,9 @@
     }
 #endif
 
-bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
+bool MemoryAccess(uintptr_t start, uintptr_t end, uintptr_t step) {
 #ifdef _WIN32
-    for (unsigned long addr = start; addr < end; addr += step) {
+    for (uintptr_t addr = start; addr < end; addr += step) {
         __try {
             volatile unsigned char *p = (unsigned char *)addr;
             unsigned char val = *p;  // Try to read
@@ -35,7 +35,7 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
     sa.sa_flags = SA_NODEFER;
     sigaction(SIGSEGV, &sa, NULL);
 
-    for (unsigned long addr = start; addr < end; addr += step) {
+    for (uintptr_t addr = start; addr < end; addr += step) {
         if (sigsetjmp(jump_buffer, 1) == 0) {
             volatile unsigned char *p = (unsigned char *)addr;
             unsigned char val = *p;  // Try to read
@@ -51,12 +51,19 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
 
 
 int main() {
+    char buffer[4];
+    printf("starting address of stack 0x%08lx\n",&buffer);
+    MemoryAccess((uintptr_t)buffer, (uintptr_t)(buffer + sizeof(buffer)), 1);
+
+
+    
     // Kernel memory is NOT accessible from user-space
     // so start somewhere after NULL page but before high addresses
-    unsigned long start = 0x500;
-    unsigned long end = 0x7FFFFFFF;  // upper bound of user space (on 32-bit)
-    unsigned long step = 0x2FFFFFF;     
+    uintptr_t start = 0x0;
+    uintptr_t end = 0x6FFFFFFF;  // upper bound of user space (on 32-bit)
+    uintptr_t step = 0x2FFFFFFF;     
     MemoryAccess(start, end, step);
+
 
     return 0;
 }

@@ -1,6 +1,17 @@
-# Kernel_Space_Access
+### Kernel_Space_Access
 
+This is a simple cross-platform C++ program that probes a range of memory addresses in the kernel vs the stack to explore  accessibllity from user-space. It uses platform-specific techniques to safely handle invalid memory accesses without crashing the program.
 
+**Features**
+- Stack inspection: Prints the address of a local stack variable and attempts to read from it byte by byte.
+
+- User-space memory scanning: Iterates over a wide address range to check which memory pages are readable.
+
+- Cross-platform support:
+
+On Windows, uses ```__try / __except``` for structured exception handling.
+
+On Linux/macOS, uses ```sigsetjmp / siglongjmp``` and installs a ```SIGSEGV``` handler.
 
 1. Segmentation Fault (Segfault)
 The most common outcome when attempting to directly access kernel space from user space is a segmentation fault. The operating system's memory protection mechanisms will prevent the access and terminate the process to prevent corruption or security vulnerabilities.
@@ -44,9 +55,7 @@ If a process tries to access an invalid memory address in kernel space, the oper
 
 Since we are only reading invalid memory:
 
-in addresses between 0x1000 and 0x7FFFFFFF.
-
-Segmentation Fault:
+in addresses between ``` 0x0``` and ```0x6FFFFFFF```.
 
 ```SIGSEGV``` occurs because the memory you are trying to access is protected by the kernel, and user-space processes are not allowed to access it.
 
@@ -55,4 +64,33 @@ This code handles using sigsetjmp and siglongjmp to recover from the signal and 
 Other Exceptions (Unlikely in this case):
 
 ```SIGBUS``` or other exceptions are less likely in this scenario, but they could happen in specific edge cases (e.g., hardware issues, misaligned memory access) when trying to read invalid addresses. These aren't typically encountered when simply trying to read from kernel-space addresses or protected regions.
+
+
+
+## Build Instructions
+
+1. **Clone the repository**:
+    ```bash
+    git clone https://github.com/marybadalyan/Kernel_Space_Access
+    ```
+
+2. **Navigate to the repository**:
+    ```bash
+    cd Kernel_Space_Access
+    ```
+
+3. **Generate build files**:
+    ```bash
+    cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+    ```
+
+4. **Build the project**:
+    ```bash
+    cmake --build build --config Release
+    ```
+
+5. **Run the executable** from the build directory:
+    ```bash
+    ./build/Kernel_Space_Access
+    ```
 
