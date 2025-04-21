@@ -3,31 +3,30 @@
 #include <cstring>   // for memset
 #ifdef _WIN32
     #include <windows.h>
-    #include <processthreadsapi.h>
 #else
     #include <signal.h>
     #include <sys/resource.h>
     #include <unistd.h>
 #endif
 
-bool testArraySize(size_t sizeBytes) {
-    const size_t count = sizeBytes; // Bytes to number of ints
+bool testArraySize(size_t sizeMBytes) {
+    size_t count = sizeMBytes * 1024 * 1024; // Bytes to number of ints
     // Will not be freeing  allocated memory
     #ifdef _WIN32
         __try {
             int* arr = (int*)malloc(count); 
             memset(arr, 0, count); // Now we force the OS to commit pages
-            std::cout << "Allocated " << sizeBytes << " bytes" << std::endl;
+            std::cout << "Allocated " << sizeMBytes << " MB" << std::endl;
             return true;
         }
         __except (EXCEPTION_EXECUTE_HANDLER){ // Structured Exception Handling
-            std::cout << "Heap overflow at " << sizeBytes << " bytes!" << std::endl;
+            std::cout << "Heap overflow at " << sizeMBytes << " MB!" << std::endl;
             return false;
         }
     #else
         int* arr  =(int*)malloc(count);
         memset(arr, 0, count);
-        std::cout << "Allocated " << sizeBytes  << " bytes" << std::endl;
+        std::cout << "Allocated " << sizeMBytes  << " MB" << std::endl;
         return true;
     #endif
 }
@@ -53,15 +52,15 @@ int main() {
         setup_segfault_handler();
     #endif
     
-        size_t sizeBytes = 100;
+        size_t sizeMBytes = 1024 * 1024; //since heap is usualy 
     
         while (true) {
-            std::cout << "Trying " << sizeBytes << " bytes..." << std::endl;
-            if (!testArraySize(sizeBytes)) {
+            std::cout << "Trying " << sizeMBytes << " MB..." << std::endl;
+            if (!testArraySize(sizeMBytes)) {
                 std::cout << "Program terminated due to heap overflow." << std::endl;
                 break;
             }
-            sizeBytes = static_cast<size_t>(sizeBytes * 1.5);
+            sizeMBytes = static_cast<size_t>(sizeMBytes * 10);
         }
     
         return 0;
