@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <vector>
 #ifdef _WIN32
     #include <windows.h>
 #else
@@ -48,6 +48,7 @@ bool MemoryAccess(unsigned long start, unsigned long end, unsigned long step) {
     return true;
 #endif
 }
+
 
 int main() {
     // Kernel memory is NOT accessible from user-space
