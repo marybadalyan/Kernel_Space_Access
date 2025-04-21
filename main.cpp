@@ -52,8 +52,7 @@ int main() {
     // so start somewhere after NULL page but before high addresses
     unsigned long start = 0x1000;
     unsigned long end = 0x7FFFFFFF;  // upper bound of user space (on 32-bit)
-    unsigned long step = 0x1000;     // page-size aligned
-
+    unsigned long step = 0xFFFFFF;     
     MemoryAccess(start, end, step);
 
     return 0;
