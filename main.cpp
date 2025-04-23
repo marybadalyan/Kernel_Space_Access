@@ -10,6 +10,7 @@
     static sigjmp_buf jump_buffer;
 
     void handler(int sig) {
+        std::cout << "h" << std::endl;
     }
 #endif
 
