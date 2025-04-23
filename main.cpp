@@ -10,7 +10,6 @@
     static sigjmp_buf jump_buffer;
 
     void handler(int sig) {
-        siglongjmp(jump_buffer, 1);
     }
 #endif
 
